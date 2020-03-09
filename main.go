@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	version         = "0.0.2"
+	version         = "0.0.3"
 	actionAbandon   = "ABANDON"
 	actionHeartBeat = "HEARTBEAT"
 	actionContinue  = "CONTINUE"
@@ -61,9 +61,7 @@ func main() {
 		verboseLog(fmt.Sprintf("Instance %s is showing as '%s'", instanceID, currentState))
 		return
 
-	}
-
-	if *setUnhealthyFlag {
+	} else if *setUnhealthyFlag {
 		err := asgmanager.SetUnhealthy(instanceID)
 		if err != nil {
 			writeToStdErr(fmt.Sprintf("Failed the set the health of the instance. Error: %s", err))
@@ -71,6 +69,9 @@ func main() {
 		}
 		verboseLog("Successfully set the instance health to 'Unhealthy'")
 		return
+	} else {
+		fmt.Println("No action specified")
+		os.Exit(1)
 	}
 }
 
@@ -112,8 +113,10 @@ func validateActions() {
 
 func validateRequiredVars() error {
 	errors := []string{}
-	if *instanceIDFlag == "" {
-		errors = append(errors, "-i instance_id must be specified")
+	if *setUnhealthyFlag || *isInServiceFlag {
+		if *instanceIDFlag == "" {
+			errors = append(errors, "-i instance_id must be specified")
+		}
 	}
 
 	if len(errors) != 0 {
